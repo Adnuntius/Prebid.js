@@ -14,6 +14,15 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
         logMessage('AA:', args);
         break;
 
+      case CONSTANTS.EVENTS.BID_RESPONSE:
+        logMessage('Bid Response:', args);
+        break;
+
+      case CONSTANTS.EVENTS.BID_WON:
+
+        logMessage('Bid Won:', args);
+        break;
+
       case CONSTANTS.EVENTS.AUCTION_END:
         logMessage('ENDED!:', args);
         break;
