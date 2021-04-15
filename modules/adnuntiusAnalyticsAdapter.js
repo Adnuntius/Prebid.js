@@ -11,20 +11,25 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
   track({ eventType, args }) {
     switch (eventType) {
       case CONSTANTS.EVENTS.AUCTION_INIT:
-        logMessage('AA:', args);
+        logMessage('ADN:aucion init', args);
         break;
-
+      case CONSTANTS.EVENTS.BID_REQUESTED:
+        logMessage('ADN: bid requested:', args);
+        break;
       case CONSTANTS.EVENTS.BID_RESPONSE:
-        logMessage('Bid Response:', args);
+        logMessage('ADN: bid response:', args);
         break;
-
+      case CONSTANTS.EVENTS.BIDDER_DONE:
+        logMessage('ADN: bid done:', args.bids);
+        break;
       case CONSTANTS.EVENTS.BID_WON:
-
-        logMessage('Bid Won:', args);
+        logMessage('ADN: Bid Won', args);
         break;
-
+      case CONSTANTS.EVENTS.BID_TIMEOUT:
+        logMessage('ADN: Bid timeout', args);
+        break;
       case CONSTANTS.EVENTS.AUCTION_END:
-        logMessage('ENDED!:', args);
+        logMessage('ADN: auction end:', args);
         break;
     }
   }
