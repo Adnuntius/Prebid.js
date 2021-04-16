@@ -11,8 +11,7 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
   track({ eventType, args }) {
     switch (eventType) {
       case CONSTANTS.EVENTS.AUCTION_INIT:
-<<<<<<< HEAD
-        logMessage('ADN:aucion init', args);
+        logMessage('ADN: aucion init', args);
         break;
       case CONSTANTS.EVENTS.BID_REQUESTED:
         logMessage('ADN: bid requested:', args);
@@ -29,24 +28,17 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
       case CONSTANTS.EVENTS.BID_TIMEOUT:
         logMessage('ADN: Bid timeout', args);
         break;
+      case CONSTANTS.EVENTS.NO_BID:
+        logMessage('ADN: NO BID:', args);
+        break;
       case CONSTANTS.EVENTS.AUCTION_END:
         logMessage('ADN: auction end:', args);
-=======
-        logMessage('AA:', args);
         break;
-
-      case CONSTANTS.EVENTS.BID_RESPONSE:
-        logMessage('Bid Response:', args);
+      case CONSTANTS.EVENTS.AD_RENDER_FAILED:
+        logMessage('ADN: renderFail:', args);
         break;
-
-      case CONSTANTS.EVENTS.BID_WON:
-
-        logMessage('Bid Won:', args);
-        break;
-
-      case CONSTANTS.EVENTS.AUCTION_END:
-        logMessage('ENDED!:', args);
->>>>>>> c33ca66e109af0e12cfb2ec819d875bb1695baba
+      case CONSTANTS.EVENTS.AUCTION_DEBUG:
+        logMessage('ADN: auction DEBUG:', args);
         break;
     }
   }
