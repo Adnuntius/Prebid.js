@@ -33,6 +33,7 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
         break;
       case CONSTANTS.EVENTS.AUCTION_END:
         logMessage('ADN: auction end:', args);
+        this.send(args)
         break;
       case CONSTANTS.EVENTS.AD_RENDER_FAILED:
         logMessage('ADN: renderFail:', args);
@@ -41,17 +42,17 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
         logMessage('ADN: auction DEBUG:', args);
         break;
     }
+  },
+  send: (events) => {
+    logMessage('ADN: auction DEBUG:', events);
   }
+
 });
 
-// save the base class function
 adnuntiusAnalytics.originEnableAnalytics = adnuntiusAnalytics.enableAnalytics;
-
-// override enableAnalytics so we can get access to the config passed in from the page
 adnuntiusAnalytics.enableAnalytics = function (config) {
-  //   const initOptions = config.options;
   logMessage('Ding: ', config)
-  adnuntiusAnalytics.originEnableAnalytics(config); // call the base class function
+  adnuntiusAnalytics.originEnableAnalytics(config);
 };
 
 adaptermanager.registerAnalyticsAdapter({
