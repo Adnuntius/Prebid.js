@@ -28,16 +28,14 @@
     "uid2IdSystem",
     "admixerIdSystem"
   ],
-  "adpod": [
-    "freeWheelAdserverVideo",
-    "dfpAdServerVideo"
-  ],
+  "adpod": ["freeWheelAdserverVideo", "dfpAdServerVideo"],
   "rtdModule": [
     "browsiRtdProvider",
     "haloRtdProvider",
     "jwplayerRtdProvider",
     "reconciliationRtdProvider",
     "geoedgeRtdProvider",
-    "sirdataRtdProvider"
+    "sirdataRtdProvider",
+    "adnuntiusRtdProvider"
   ]
 }
