@@ -1,6 +1,6 @@
-// import { getGlobal } from '../src/prebidGlobal.js';
+import { getGlobal } from '../src/prebidGlobal.js';
 import { submodule } from '../src/hook.js'
-import { logError, logMessage } from '../src/utils.js'
+import { logError } from '../src/utils.js'
 import { ajax } from '../src/ajax.js';
 
 const tzo = new Date().getTimezoneOffset();
@@ -12,20 +12,12 @@ function init(config, userConsent) {
 
 const providers = {
   adnuntius: {
-    url: params => {
-      return 'https://data.adnuntius.com/usr?tzo=' + tzo + '&browserId=' + ADN_USER_ID + '&folderId=' + params.folderId
-    },
-    function: res => {
-      logMessage('ADN: adn-return', res)
-      return res
-    },
+    url: params => 'https://data.adnuntius.com/usr?tzo=' + tzo + '&browserId=' + ADN_USER_ID + '&folderId=' + params.folderId,
+    function: res => JSON.parse(res).segments,
   },
   novatiq: {
     url: params => 'https://novatiq.consumor.io/segments/v1/novademo/45340f6d-d9ee-4ee9-b785-36f3e30ff1599999',
-    function: res => {
-      logMessage('ADN: novatiq-return', res)
-      return res
-    },
+    function: res => JSON.parse(res).segments,
   }
 }
 
@@ -41,31 +33,39 @@ function prepProvider(provider) {
 
 function alterBidRequests(reqBidsConfigObj, callback, config, userConsent) {
   const params = config.params
-  // const pbjsG = getGlobal()
-  // const affectedBidders = (params.bidders) ? Object.keys(params.bidders).filter(function (bidder) {
-  //   return params.bidders[bidder] == true
-  // }) : []
-  const affectedProviders = (params.providers) ? Object.keys(params.providers).map(provider => {
-    return {
-      ...params.providers[provider],
-      name: provider
-    }
-  }) : []
-  logMessage('ADN: providers', affectedProviders);
+  const pbjsG = getGlobal()
+  const affectedBidders = (params.bidders)
+    ? Object.keys(params.bidders).filter(function (bidder) {
+      return params.bidders[bidder] == true
+    })
+    : []
+
+  const affectedProviders = (params.providers)
+    ? Object.keys(params.providers).map(provider => {
+      return {
+        ...params.providers[provider],
+        name: provider
+      }
+    })
+    : []
 
   const providerRequests = affectedProviders.map(provider => prepProvider(provider))
-  logMessage('ADN: providerReq', providerRequests);
+
   Promise.allSettled(providerRequests).then((values) => {
-    logMessage('ADN: PROMISE', values);
-    // SEGMENT_LIST = [...SEGMENT_LIST, ...segments]
-    // pbjsG.setBidderConfig({
-    //   bidders: affectedBidders,
-    //   config: {
-    //     segments: SEGMENT_LIST
-    //   }
-    // });
+    const segments = values.reduce((segments, array) => (array.status === 'fulfilled') ? segments.concat(array.value) : [], [])
+
+    pbjsG.setBidderConfig({
+      bidders: affectedBidders,
+      config: {
+        rtd: {
+          adnuntius: { segments }
+        }
+      }
+    });
+
     callback();
-  }).catch(err => logError('ADN: err', err));
+  })
+    .catch(err => logError('ADN: err', err));
 }
 
 /** @type {RtdSubmodule} */

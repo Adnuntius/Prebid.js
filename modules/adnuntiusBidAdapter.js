@@ -1,4 +1,6 @@
 import { registerBidder } from '../src/adapters/bidderFactory.js';
+import { getGlobal } from '../src/prebidGlobal.js';
+import { logMessage } from '../src/utils.js'
 
 const BIDDER_CODE = 'adnuntius';
 const ENDPOINT_URL = 'https://delivery.adnuntius.com/i?tzo=';
@@ -15,6 +17,10 @@ export const spec = {
     const bidRequests = {};
     const requests = [];
     const tzo = new Date().getTimezoneOffset();
+    const pbjsG = getGlobal()
+    logMessage(pbjsG.getConfig())
+    const rtd = pbjsG.getConfig('rtd')
+    const segmentRequest = (rtd && rtd.adnuntius) ? '&segments=' + rtd.adnuntius.segments.join(',') : ''
 
     for (var i = 0; i < validBidRequests.length; i++) {
       const bid = validBidRequests[i]
@@ -32,7 +38,7 @@ export const spec = {
       const network = networkKeys[j];
       requests.push({
         method: 'POST',
-        url: ENDPOINT_URL + tzo + '&format=json',
+        url: ENDPOINT_URL + tzo + '&format=json' + segmentRequest,
         data: JSON.stringify(networks[network]),
         bid: bidRequests[network]
       });
