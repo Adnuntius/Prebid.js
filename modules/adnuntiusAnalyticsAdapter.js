@@ -28,17 +28,16 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
           auctions[args.auctionId].gdprConsent = args.gdprConsent ? args.gdprConsent.consentString : undefined;
 
           auctions[args.auctionId].bids[bidRequest.bidId] = {
+            domain: window.location.hostname,
             bidder: bidRequest.bidder,
             adUnit: bidRequest.adUnitCode,
-            isBid: false,
+            status: false,
             won: false,
             timeout: false,
             sent: false,
             readyToSend: false,
             start: args.start,
             floorData: bidRequest.floorData,
-            auc: bidRequest.auc,
-            buc: bidRequest.buc
           }
 
           logMessage(bidRequest);
@@ -48,9 +47,8 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
       case CONSTANTS.EVENTS.BID_RESPONSE:
 
         let bidResponse = auctions[args.auctionId].bids[args.requestId];
-        bidResponse.isBid = args.getStatusCode() === CONSTANTS.STATUS.GOOD;
-        bidResponse.width = args.width;
-        bidResponse.height = args.height;
+        bidResponse.status = args.getStatusCode() === CONSTANTS.STATUS.GOOD;
+        bidResponse.size = args.width + 'x' + args.height;
         bidResponse.cpm = args.cpm;
         bidResponse.ttr = args.timeToRespond;
         bidResponse.readyToSend = true;
@@ -58,6 +56,7 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
         if (!bidResponse.ttr) {
           bidResponse.ttr = time - bidResponse.start;
         }
+
         if (!auctions[args.auctionId].bidAdUnits[bidResponse.adUnit]) {
           auctions[args.auctionId].bidAdUnits[bidResponse.adUnit] =
           {
@@ -109,13 +108,17 @@ let adnuntiusAnalytics = Object.assign(adapter({}), {
     }
   },
   send: () => {
-    logMessage('ADN: SENDING AUCTION:', auctions);
     const bulkSend = []
     Object.keys(auctions).forEach(auctionId => {
       Object.keys(auctions[auctionId].bids).forEach(bidId => {
         const bid = auctions[auctionId].bids[bidId]
+        const sendBid = Object.assign({}, bid)
         logMessage('ADN: RUNNING BID:', bid);
-        if (bid.readyToSend && !bid.sent) bulkSend.push(bid)
+        [
+          'readyToSend',
+          'sent',
+        ].forEach(e => delete sendBid[e]);
+        if (bid.readyToSend && !bid.sent) bulkSend.push(sendBid)
         bid.sent = true
       });
     });
