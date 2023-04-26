@@ -209,7 +209,6 @@ export const spec = {
       const networkRequest = [...request]
       if (network.indexOf('_video') > -1) { networkRequest.push('tt=' + DEFAULT_VAST_VERSION) }
       const requestURL = gdprApplies ? ENDPOINT_URL_EUROPE : ENDPOINT_URL
-      // if (network.indexOf('_native') > -1) { networkRequest.push('tt=' + DEFAULT_NATIVE) }
       requests.push({
         method: 'POST',
         url: requestURL + '?' + networkRequest.join('&'),
