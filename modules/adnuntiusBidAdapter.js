@@ -171,6 +171,7 @@ export const spec = {
     if (segments.length > 0) request.push('segments=' + segments.join(','));
     if (adnMeta.usi) request.push('userId=' + adnMeta.usi);
     if (bidderConfig.useCookie === false) request.push('noCookies=true')
+    if (bidderConfig.maxDeals > 0) request.push('ds=' + bidderConfig.maxDeals)
     for (let i = 0; i < validBidRequests.length; i++) {
       const bid = validBidRequests[i]
       if (adnMeta.voidAuIdsArray && adnMeta.voidAuIdsArray.indexOf(bid.params.auId) > -1) {
@@ -225,45 +226,62 @@ export const spec = {
       storageTool.setMeta(serverResponse.body.metaData);
     }
     const adUnits = serverResponse.body.adUnits;
-    const bidResponsesById = adUnits.reduce((response, adUnit) => {
-      if (adUnit.matchedAdCount >= 1) {
-        const ad = adUnit.ads[0];
-        const effectiveCpm = (ad.bid) ? ad.bid.amount * 1000 : 0;
-        const adResponse = {
-          ...response,
-          [adUnit.targetId]: {
-            requestId: adUnit.targetId,
-            cpm: effectiveCpm,
-            width: Number(ad.creativeWidth),
-            height: Number(ad.creativeHeight),
-            creativeId: ad.creativeId,
-            currency: (ad.bid) ? ad.bid.currency : 'EUR',
-            dealId: ad.dealId || '',
-            meta: {
-              advertiserDomains: (ad.destinationUrls.destination) ? [ad.destinationUrls.destination.split('/')[2]] : []
 
-            },
-            netRevenue: false,
-            ttl: 360,
-          }
-        }
-
-        if (adUnit.vastXml) {
-          adResponse[adUnit.targetId].vastXml = adUnit.vastXml
-          adResponse[adUnit.targetId].mediaType = VIDEO
-        } else {
-          adResponse[adUnit.targetId].ad = adUnit.html
-        }
-
-        return adResponse
+    function buildAdResponse(ad, adUnit, isDeal) {
+      let destinationUrls = ad.destinationUrls || {};
+      let advertiserDomains = [];
+      for (const value of Object.values(destinationUrls)) {
+        advertiserDomains.push(value.split('/')[2])
+      }
+      let adResponse = {
+        requestId: adUnit.targetId,
+        cpm: (ad.bid) ? ad.bid.amount * 1000 : 0,
+        width: Number(ad.creativeWidth),
+        height: Number(ad.creativeHeight),
+        creativeId: ad.creativeId,
+        currency: (ad.bid) ? ad.bid.currency : 'EUR',
+        dealId: ad.dealId || '',
+        meta: {
+          advertiserDomains: advertiserDomains
+        },
+        netRevenue: false,
+        ttl: 360,
+      };
+      // Deal bids provide the rendered ad content along with the
+      // bid; whereas regular bids have it stored on the ad-unit.
+      let renderSource = isDeal ? ad : adUnit;
+      if (renderSource.vastXml) {
+        adResponse.vastXml = renderSource.vastXml
+        adResponse.mediaType = VIDEO
       } else {
-        return response
+        adResponse.ad = renderSource.html
+      }
+      return adResponse;
+    }
+
+    const bidResponsesById = adUnits.reduce((response, adUnit) => {
+      let deals = adUnit.deals || [];
+      if ((adUnit.matchedAdCount + deals.length) > 0) {
+        let adResponses = [];
+        if (adUnit.matchedAdCount === 1) {
+          adResponses.push(buildAdResponse(adUnit.ads[0], adUnit, false));
+        }
+        for (let i = 0; i < deals.length; i++) {
+          adResponses.push(buildAdResponse(deals[i], adUnit, true));
+        }
+        return {
+          ...response,
+          [adUnit.targetId]: adResponses
+        };
+      } else {
+        // No bids or deals returned
+        return response;
       }
     }, {});
 
-    return bidRequest.bid.map(bid => bid.bidId).reduce((request, adunitId) => {
-      if (bidResponsesById[adunitId]) {
-        request.push(bidResponsesById[adunitId])
+    return bidRequest.bid.map(bid => bid.bidId).reduce((request, adUnitTargetId) => {
+      if (bidResponsesById[adUnitTargetId]) {
+        request.push(...bidResponsesById[adUnitTargetId])
       }
       return request
     }, [])
