@@ -406,6 +406,15 @@ export function isPlainObject(object) {
   return isA(object, tObject);
 }
 
+/**
+ * Returns true if value is an object created via {} or new Object() and the object has keys, so {} fails but {a: 'b'} passes
+ * @param object
+ * @returns {Boolean}
+ */
+export function isPlainObjectWithKeys(object) {
+  return isA(object, tObject) && Object.keys(object).length > 0;
+}
+
 export function isBoolean(object) {
   return isA(object, tBoolean);
 }
